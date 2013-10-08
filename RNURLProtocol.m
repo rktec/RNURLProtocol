@@ -67,13 +67,17 @@ static NSMutableArray *__whiteListURLs = nil;
     NSData *data = [__diskCache objectForKey:[self dataKey]];
 
     if (res) {
+#ifdef DEBUG
         NSLog(@"--- Hit %@", self.request.URL);
+#endif
         // we handle caching ourselves.
         [[self client] URLProtocol:self didReceiveResponse:res cacheStoragePolicy:NSURLCacheStorageNotAllowed];
         [[self client] URLProtocol:self didLoadData:data];
         [[self client] URLProtocolDidFinishLoading:self];
     } else {
+#ifdef DEBUG
         NSLog(@"--- Loss, fetching %@", self.request.URL);
+#endif
         NSMutableURLRequest *connectionRequest = [[self request] mutableCopy];
         // we need to mark this request with our header so we know not to handle it in +[NSURLProtocol canInitWithRequest:].
         [connectionRequest setValue:@"" forHTTPHeaderField:RNCachingURLHeader];
