@@ -68,7 +68,7 @@ static NSMutableArray *__whiteListURLs = nil;
 
     if (res) {
 #ifdef DEBUG
-        NSLog(@"--- Hit %@", self.request.URL);
+        NSLog(@"--- Hit - %@", self.request.URL);
 #endif
         // we handle caching ourselves.
         [[self client] URLProtocol:self didReceiveResponse:res cacheStoragePolicy:NSURLCacheStorageNotAllowed];
@@ -76,7 +76,7 @@ static NSMutableArray *__whiteListURLs = nil;
         [[self client] URLProtocolDidFinishLoading:self];
     } else {
 #ifdef DEBUG
-        NSLog(@"--- Loss, fetching %@", self.request.URL);
+        NSLog(@"--- Loss - %@", self.request.URL);
 #endif
         NSMutableURLRequest *connectionRequest = [[self request] mutableCopy];
         // we need to mark this request with our header so we know not to handle it in +[NSURLProtocol canInitWithRequest:].
@@ -119,12 +119,15 @@ static NSMutableArray *__whiteListURLs = nil;
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     [[self client] URLProtocolDidFinishLoading:self];
 
-    [__diskCache setObject:_response forKey:self.request.URL];
-    [__diskCache setObject:_data forKey:[self dataKey]];
-
-    _connection = nil;
-    _response = nil;
-    _data = nil;
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_async(queue, ^{
+        NSLog(@"--- Saved - %@", self.request.URL);
+        [__diskCache setObject:_response forKey:self.request.URL];
+        [__diskCache setObject:_data forKey:[self dataKey]];
+        _connection = nil;
+        _response = nil;
+        _data = nil;
+    });
 }
 
 #pragma mark - Inner Logic
